@@ -1,6 +1,7 @@
 package linearprogramming;
 
 import util.NotImplementedException;
+import java.util.*;
 
 /**
  * Encodes a maximum cardinality matching problem
@@ -16,12 +17,13 @@ import util.NotImplementedException;
  * solving the problem through a simplex solver {@link LinearProgramming}
  */
 public class MatchingMatrices {
-
+    private static final double EPSILON = 1.0E-10;
     // matrices of the problem: maximize cx s.t. Ax <= b
     final double[][] A;
     final double[] b;
     final double[] c;
     private final Graph graph; // instance that needs to be modelled
+    private final List<Edge> edges;// list of unique edges for index mapping
 
     /**
      * Creates the matrices A, b and c from a maximum cardinality matching graph
@@ -30,10 +32,35 @@ public class MatchingMatrices {
      */
     public MatchingMatrices(Graph graph) {
         this.graph = graph;
-        // TODO
-        //  encode the problem into matrices A, b and c
-        //  such that a LinearProgramming instance can be created from them
-         throw new NotImplementedException("MatchingMatrices");
+        this.edges = new ArrayList<>();
+        for (Edge edge : graph.uniqueEdges()) {
+            this.edges.add(edge);
+        } // Get all unique edges
+        int numEdges = edges.size();
+        int numVertices = graph.V(); // Total number of vertices
+
+        // Initialize matrices and vectors
+        // A: numVertices rows (constraints) x numEdges columns (variables)
+        A = new double[numVertices][numEdges];
+        // b: each vertex can be in at most 1 edge
+        b = new double[numVertices];
+        for (int i = 0; i < numVertices; i++) {
+            b[i] = 1.0;
+        }
+        // c: maximize the number of edges, so each variable has coefficient 1
+        c = new double[numEdges];
+        for (int j = 0; j < numEdges; j++) {
+            c[j] = 1.0;
+        }
+
+        // Populate matrix A: A[vertex][edge] = 1 if the edge is incident to the vertex
+        for (int j = 0; j < numEdges; j++) {
+            Edge edge = edges.get(j);
+            int u = edge.v();
+            int v = edge.w();
+            A[u][j] = 1.0;
+            A[v][j] = 1.0;
+        }
     }
 
     /**
@@ -47,7 +74,12 @@ public class MatchingMatrices {
      * @return true if the edge is selected in the solution
      */
     public boolean isEdgeSelected(double[] solution, Edge edge) {
-         throw new NotImplementedException("MatchingMatrices");
+        int index = edges.indexOf(edge);
+        if (index == -1) {
+            return false; // edge not found in the list
+        }
+        // Due to floating-point precision, check if the value is close to 1
+        return solution[index] >= 1 - EPSILON;
     }
 
     public static void main(String[] args) {
