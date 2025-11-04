@@ -56,10 +56,41 @@ public class BigMSimplex {
         n = c.length;
         a = new double[m+1][n+m+m+1];
         this.BigM = BigM;
-        // TODO fill the tableau a using the provided matrices
-        //  your code should look a lot like the code from TwoPhaseSimplex
-        //  find the differences between TwoPhaseSimplex and the Big-M approach to fill correctly the matrix
-        //  you should not modify the dimensions of the matrix, nor touching the other methods provided
+
+        // initize
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                a[i][j] = A[i][j];
+            }
+            a[i][n + i] = 1.0;
+        }
+
+        for (int i = 0; i < m; i++) {
+            a[i][n + m + m] = b[i];
+            if (b[i] < 0) {
+                for (int j = 0; j <= n + m + m; j++) {
+                    a[i][j] = -a[i][j];
+                }
+            }
+        }
+
+        // initize from n+m to n+m+m-1
+        for (int i = 0; i < m; i++) {
+            a[i][n + m + i] = 1.0;
+        }
+
+        for (int j = 0; j < n; j++) {
+            a[m][j] = c[j];
+        }
+
+        for (int i = 0; i < m; i++) {
+            a[m][n + m + i] = -BigM;
+        }
+
+        basis = new int[m];
+        for (int i = 0; i < m; i++) {
+            basis[i] = n + m + i;
+        }
 
         solve(listener);
     }
