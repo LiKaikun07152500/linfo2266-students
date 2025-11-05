@@ -57,44 +57,54 @@ public class BigMSimplex {
         a = new double[m+1][n+m+m+1];
         this.BigM = BigM;
 
-        // initize
+        // Initialize tableau
         for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                a[i][j] = A[i][j];
-            }
-            a[i][n + i] = 1.0;
-        }
-
-        for (int i = 0; i < m; i++) {
-            a[i][n + m + m] = b[i];
+            // If b[i] < 0, multiply row by -1
             if (b[i] < 0) {
-                for (int j = 0; j <= n + m + m; j++) {
-                    a[i][j] = -a[i][j];
+                for (int j = 0; j < n; j++) {
+                    a[i][j] = -A[i][j];
+                }
+                b[i] = -b[i];
+            } else {
+                for (int j = 0; j < n; j++) {
+                    a[i][j] = A[i][j];
                 }
             }
-        }
 
-        // initize from n+m to n+m+m-1
-        for (int i = 0; i < m; i++) {
+            // Slack variables (always +1 for <= constraints)
+            a[i][n + i] = 1.0;
+
+            // Artificial variables (introduced for all constraints)
             a[i][n + m + i] = 1.0;
+
+            // Right-hand side
+            a[i][n + m + m] = b[i];
         }
 
+        // Objective function: maximize c^T x - M * sum(x_a)
         for (int j = 0; j < n; j++) {
-            a[m][j] = c[j];
+            a[m][j] = -c[j];
+        }
+        for (int j = n + m; j < n + m + m; j++) {
+            a[m][j] = -BigM;
         }
 
-        for (int i = 0; i < m; i++) {
-            a[m][n + m + i] = -BigM;
-        }
-
+        // Initialize basis to artificial variables
         basis = new int[m];
         for (int i = 0; i < m; i++) {
             basis[i] = n + m + i;
         }
 
+        for (int i = 0; i < m; i++) {
+            int artCol = n + m + i; // artificial column index
+            for (int j = 0; j <= n + m + m; j++) {
+                a[m][j] += BigM * a[i][j];
+            }
+        }
+
+
         solve(listener);
     }
-
     // run simplex algorithm starting from initial BFS
     // WARNING: you should not modify this code
     private void solve(Consumer<double[][]> listener) {
