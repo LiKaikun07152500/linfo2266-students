@@ -24,7 +24,6 @@ public class LocalSearch {
         this.neighborSelection = neighborSelection;
         this.initialization = initialization;
     }
-
     public Candidate run() {
         currentCandidate = initialization.getInitialSolution();
         bestCandidate = currentCandidate.clone();

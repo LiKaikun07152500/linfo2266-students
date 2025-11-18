@@ -16,9 +16,43 @@ public class KOptSelection implements NeighborSelection {
 
     @Override
     public Candidate getNeighbor(Candidate candidate) {
-        // TODO implement a KOpt neighborhood by repeatedly applying the best 2Swap k times then return the best solution found
+
         // hint : use a map to save intermediate solutions
-         throw new util.NotImplementedException("KOpt.getNeighbor");
+        Candidate current = candidate;
+        double currentCost = candidate.getCost();
+
+        for (int k = 0; k < maxK; k++) {
+
+            Candidate bestNeighbor = current;
+            double bestDelta = 0;
+
+            int n = current.getTour().length;
+
+            for (int i = 0; i < n; i++) {
+                for (int j = i + 1; j < n; j++) {
+
+                    double delta = current.twoOptDelta(i, j);
+
+                    if (delta < bestDelta) {
+                        bestDelta = delta;
+
+                        Candidate improved = current.clone();
+                        improved.twoOpt(i, j);
+                        bestNeighbor = improved;
+                    }
+                }
+            }
+
+            if (bestDelta >= 0) {
+                break;
+            }
+
+            current = bestNeighbor;
+            currentCost = current.getCost();
+        }
+
+        return current;
+        //throw new util.NotImplementedException("KOpt.getNeighbor");
     }
 
 }

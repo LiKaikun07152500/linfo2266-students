@@ -76,8 +76,27 @@ public class Candidate {
      */
     public void twoOpt(int index1, int index2) {
 
-        // TODO Swap the successor of index1 with index 2. Note : index1 can be greater than index2
-         throw new util.NotImplementedException("Candidate.applySwap");
+        if (index1 == index2) return;
+
+        if (index1 > index2) {
+            int tmp = index1;
+            index1 = index2;
+            index2 = tmp;
+        }
+
+        int i = index1 + 1;
+        int j = index2;
+
+        while (i < j) {
+            int tmp = tour[i];
+            tour[i] = tour[j];
+            tour[j] = tmp;
+            i++;
+            j--;
+        }
+
+        this.cost = computeCost();
+        //throw new util.NotImplementedException("Candidate.applySwap");
     }
 
 
@@ -91,4 +110,8 @@ public class Candidate {
         return tour;
     }
 
+    public void setTour(int[] tour) {
+        this.tour = tour;
+        this.cost = computeCost();
+    }
 }
