@@ -104,8 +104,12 @@ public class Domain implements Iterable<Integer> {
      * @return if the domain has changed
      */
     public boolean removeBelow(int v) {
-        // TODO remove all values below v (v not included)
-        throw new NotImplementedException("removeBelow");
+        if (v <= 0) return false;
+        int prevSize = size();
+        values.clear(0, v);
+        if (size() == 0) throw new TinyCSP.Inconsistency();
+        return size() != prevSize;
+        //throw new NotImplementedException("removeBelow");
     }
 
     /**
@@ -117,8 +121,22 @@ public class Domain implements Iterable<Integer> {
      * @return if the domain has changed
      */
     public boolean removeAbove(int v) {
-        // TODO remove all values above v (v not included)
-        throw new NotImplementedException("removeAbove");
+        int currentMax = max();
+        if (v >= currentMax) {
+            return false;
+        }
+        int fromIndex = v + 1;
+        if (fromIndex <= 0) {
+            values.clear();
+            throw new TinyCSP.Inconsistency();
+        }
+        int prevSize = size();
+        values.clear(fromIndex, currentMax + 1);
+        if (size() == 0) {
+            throw new TinyCSP.Inconsistency();
+        }
+        return size() != prevSize;
+        //throw new NotImplementedException("removeAbove");
     }
 
     /**

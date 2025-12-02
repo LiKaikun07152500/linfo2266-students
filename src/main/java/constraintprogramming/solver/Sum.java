@@ -36,8 +36,34 @@ public class Sum extends Constraint{
 
     @Override
     boolean propagate() {
-        // TODO 1 update the value of y based on x
+        // TODO 1 update the value of y based on x(done)
+        boolean changed = false;
+        int sumMin = 0;
+        int sumMax = 0;
+        for (Variable xi : x) {
+            sumMin += xi.dom.min();
+            sumMax += xi.dom.max();
+        }
+        if (y.dom.removeBelow(sumMin)) changed = true;
+        if (y.dom.removeAbove(sumMax)) changed = true;
         // TODO 2 update the value of each x[i] based on y and the other x[i]'s
-        throw new NotImplementedException("sum");
+        int yMin = y.dom.min();
+        int yMax = y.dom.max();
+        for (int i = 0; i < x.length; i++) {
+            Variable xi = x[i];
+            int otherMin = 0, otherMax = 0;
+            for (int j = 0; j < x.length; j++) {
+                if (j != i) {
+                    otherMin += x[j].dom.min();
+                    otherMax += x[j].dom.max();
+                }
+            }
+            int xiNewMin = yMin - otherMax;
+            int xiNewMax = yMax - otherMin;
+            if (xi.dom.removeBelow(xiNewMin)) changed = true;
+            if (xi.dom.removeAbove(xiNewMax)) changed = true;
+        }
+        return changed;
+        //throw new NotImplementedException("sum");
     }
 }

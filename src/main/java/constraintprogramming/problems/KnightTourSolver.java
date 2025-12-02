@@ -30,7 +30,7 @@ public class KnightTourSolver {
     public static List<KnightTourInstance.Solution> solve(KnightTourInstance instance) {
         TinyCSP csp = new TinyCSP();
         int n = instance.n();
-
+        int size = n * n;
         // Variables
         Variable[] x = new Variable[n*n];
         for (int i = 0; i < n*n; i++) {
@@ -38,7 +38,21 @@ public class KnightTourSolver {
         }
 
         // Constraints
-        // TODO add the constraints to the CSP
+        for (int i = 0; i < size; i++) {
+            if (instance.isMove(i)) {
+                x[i].dom.fix(instance.move(i));
+            }
+        }
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
+                csp.notEqual(x[i], x[j]);
+            }
+        }
+        for (int i = 0; i < size; i++) {
+            int nextStep = (i + 1) % size;
+            csp.add(new KnightMove(x[i], x[nextStep], n));
+        }
+
 
         // collect all the solutions
         ArrayList<KnightTourInstance.Solution> solutions = new ArrayList<>();

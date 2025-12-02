@@ -5,6 +5,7 @@ import constraintprogramming.solver.Variable;
 import util.NotImplementedException;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,14 +39,56 @@ public class MagicSquareSolver {
     public List<MagicSquareInstance.Solution> solve() {
         List<MagicSquareInstance.Solution> listSol = new ArrayList<>();
         int n = instance.n();
-        // TODO 1 create the variables for your problem
-        //  don't forget to take into account the possibly already (un)set values in the magic square!
-        //  you can check if a value is set with the instance.isValue() method
-        // TODO 2 add constraints on your variables
-
+        int size = n * n;
+        Variable[][] vars = new Variable[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                vars[i][j] = csp.makeVariable(size + 1);
+                vars[i][j].dom.remove(0);
+                if (instance.isValue(i, j)) {
+                    vars[i][j].dom.fix(instance.value(i, j));
+                }
+            }
+        }
+        Variable[] allVars = new Variable[size];
+        int idx = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                allVars[idx++] = vars[i][j];
+            }
+        }
+        for (int i = 0; i < size; i++) {
+            for (int j = i + 1; j < size; j++) {
+                csp.notEqual(allVars[i], allVars[j]);
+            }
+        }
+        int magicConstant = getMagicConstant();
+        // 行约束
+        for (int i = 0; i < n; i++) {
+            csp.sum(vars[i], magicConstant);
+        }
+        // 列约束
+        for (int j = 0; j < n; j++) {
+            Variable[] col = new Variable[n];
+            for (int i = 0; i < n; i++) col[i] = vars[i][j];
+            csp.sum(col, magicConstant);
+        }
+        // 主对角线（i=j）
+        Variable[] diag1 = new Variable[n];
+        for (int i = 0; i < n; i++) diag1[i] = vars[i][i];
+        csp.sum(diag1, magicConstant);
+        // 副对角线（i+j = n-1）
+        Variable[] diag2 = new Variable[n];
+        for (int i = 0; i < n; i++) diag2[i] = vars[i][n - 1 - i];
+        csp.sum(diag2, magicConstant);
         csp.dfs(() -> {
-            // TODO 3 set the values of solution based on your fixed variables
             int[][] solution = new int[n][n];
+            for(int i = 0; i < n; i++) {
+                for(int j = 0; j < n; j++) {
+                    Iterator<Integer> it = vars[i][j].dom.iterator();
+                    solution[i][j] = it.next();
+                }
+            }
             MagicSquareInstance.Solution sol = new MagicSquareInstance.Solution(solution);
             //System.out.println(sol+"\n");
             listSol.add(sol);
@@ -60,9 +103,9 @@ public class MagicSquareSolver {
      * @return expected sum across all rows, columns and diagonals
      */
     public int getMagicConstant() {
-        // TODO 4 (not needed for correctness but useful for efficiency) compute the sum of a row within a n*n magic square
-        //  and use it to enhance your model
-        throw new NotImplementedException("getMagicConstant");
+        int n = instance.n();
+        return n * (n * n + 1) / 2;
+        //throw new NotImplementedException("getMagicConstant");
     }
 
 

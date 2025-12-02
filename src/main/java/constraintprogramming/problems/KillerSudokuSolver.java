@@ -37,13 +37,70 @@ public class KillerSudokuSolver {
         TinyCSP csp = new TinyCSP();
         List<KillerSudokuInstance.Solution> listSol = new ArrayList<>();
         int n = instance.n();
-        // TODO 1 create the variables for your problem
-        //  don't forget to take into account the possibly already (un)set values in the killer sudoku!
-        //  you can check if a value is set with the instance.isValue() method
-        // TODO 2 add constraints on your variables
+        int subSize = (int) Math.sqrt(n);
+        Variable[][] vars = new Variable[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                vars[i][j] = csp.makeVariable(n + 1);
+                vars[i][j].dom.remove(0);
+                if (instance.isValue(i, j)) {
+                    vars[i][j].dom.fix(instance.value(i, j));
+                }
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            Variable[] row = vars[i];
+            for (int a = 0; a < n; a++) {
+                for (int b = a + 1; b < n; b++) {
+                    csp.notEqual(row[a], row[b]);
+                }
+            }
+        }
+        for (int j = 0; j < n; j++) {
+            Variable[] col = new Variable[n];
+            for (int i = 0; i < n; i++) {
+                col[i] = vars[i][j];
+            }
+            for (int a = 0; a < n; a++) {
+                for (int b = a + 1; b < n; b++) {
+                    csp.notEqual(col[a], col[b]);
+                }
+            }
+        }
+        for (int blockRow = 0; blockRow < subSize; blockRow++) {
+            for (int blockCol = 0; blockCol < subSize; blockCol++) {
+                Variable[] block = new Variable[n];
+                int idx = 0;
+                for (int i = 0; i < subSize; i++) {
+                    for (int j = 0; j < subSize; j++) {
+                        int row = blockRow * subSize + i;
+                        int col = blockCol * subSize + j;
+                        block[idx++] = vars[row][col];
+                    }
+                }
+                for (int a = 0; a < n; a++) {
+                    for (int b = a + 1; b < n; b++) {
+                        csp.notEqual(block[a], block[b]);
+                    }
+                }
+            }
+        }
+        for (KillerSudokuGroup group : instance.groups()) {
+            Coordinate[] coords = group.values();
+            Variable[] groupVars = new Variable[coords.length];
+            for (int i = 0; i < coords.length; i++) {
+                Coordinate c = coords[i];
+                groupVars[i] = vars[c.i()][c.j()];
+            }
+            csp.sum(groupVars, group.sum());
+        }
         csp.dfs(() -> {
             int[][] solution = new int[n][n];
-            // TODO 3 set the values of solution based on your fixed variables
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    solution[i][j] = vars[i][j].dom.iterator().next();
+                }
+            }
             KillerSudokuInstance.Solution sol = new KillerSudokuInstance.Solution(solution);
             //System.out.println(sol+"\n");
             listSol.add(sol);

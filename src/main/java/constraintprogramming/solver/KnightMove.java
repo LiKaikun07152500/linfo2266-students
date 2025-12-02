@@ -1,5 +1,7 @@
 package constraintprogramming.solver;
-
+import java.util.BitSet;
+import java.util.function.IntFunction;
+import java.util.function.BiFunction;
 
 /**
  * A constraint between two
@@ -28,15 +30,57 @@ public class KnightMove extends Constraint {
 
     @Override
     boolean propagate() {
-        // TODO implement the constraint,
-        //  it should enforce that y can only take values corresponding to positions reachable from
-        //  any possible destination of x.
-        //  For example : consider a 5 x 5 grid, the positions are represented by the duo (line, column).
-        //  The domain of x contains only the values 0 and 2 in its domain,
-        //  respectively the positions (0,0) and (0,2).
-        //  The domain of y should only contain the positions accessible from those two
-        //  positions : 11 (2, 1), 7 (1, 2), 5 (1, 0), 13 (2, 3) and 9 (1, 4)
-         throw new util.NotImplementedException("EulerConstraint");
+        boolean changed = false;
+        IntFunction<int[]> posToCoord = pos -> new int[]{pos / n, pos % n};
+        BiFunction<Integer, Integer, Integer> coordToPos = (row, col) -> row * n + col;
+        BitSet allowedY = new BitSet(n * n);
+        for (int xPos : x.dom) {
+            int[] coord = posToCoord.apply(xPos);
+            int row = coord[0], col = coord[1];
+            int[][] moves = {{2, 1}, {2, -1}, {-2, 1}, {-2, -1},
+                    {1, 2}, {1, -2}, {-1, 2}, {-1, -2}};
+            for (int[] m : moves) {
+                int newRow = row + m[0];
+                int newCol = col + m[1];
+                if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < n) {
+                    int yPos = coordToPos.apply(newRow, newCol);
+                    allowedY.set(yPos);
+                }
+            }
+        }
+        Domain yDomCopy = y.dom.clone();
+        for (int yPos : yDomCopy) {
+            if (!allowedY.get(yPos)) {
+                if (y.dom.remove(yPos)) {
+                    changed = true;
+                }
+            }
+        }
+        BitSet allowedX = new BitSet(n * n);
+        for (int yPos : y.dom) {
+            int[] coord = posToCoord.apply(yPos);
+            int row = coord[0], col = coord[1];
+            int[][] moves = {{2, 1}, {2, -1}, {-2, 1}, {-2, -1},
+                    {1, 2}, {1, -2}, {-1, 2}, {-1, -2}};
+            for (int[] m : moves) {
+                int newRow = row + m[0];
+                int newCol = col + m[1];
+                if (newRow >= 0 && newRow < n && newCol >= 0 && newCol < n) {
+                    int xPos = coordToPos.apply(newRow, newCol);
+                    allowedX.set(xPos);
+                }
+            }
+        }
+        Domain xDomCopy = x.dom.clone();
+        for (int xPos : xDomCopy) {
+            if (!allowedX.get(xPos)) {
+                if (x.dom.remove(xPos)) {
+                    changed = true;
+                }
+            }
+        }
+        return changed;
+        //throw new util.NotImplementedException("EulerConstraint");
     }
 
 }

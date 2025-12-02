@@ -21,10 +21,13 @@ public class LessOrEqual extends Constraint {
 
     @Override
     boolean propagate() {
-        // TODO implement the propagation for x <= y
-        //  you should only update the minimum and maximum values of the variables
-        //  there is no need to call remove() somewhere in the middle of the domain
-        throw new NotImplementedException("lessOrEqual");
+        boolean changed = false;
+        int newXMax = Math.min(x.dom.max(), y.dom.max());
+        if (x.dom.removeAbove(newXMax)) changed = true;
+        int newYMin = Math.max(y.dom.min(), x.dom.min());
+        if (y.dom.removeBelow(newYMin)) changed = true;
+        return changed;
+        //throw new NotImplementedException("lessOrEqual");
     }
 
 }
